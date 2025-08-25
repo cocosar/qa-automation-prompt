@@ -1,0 +1,6 @@
+node_modules
+src/check-http.ts
+src/check.ts
+dist/
+request_logs.db-shm
+request_logs.db-wal
