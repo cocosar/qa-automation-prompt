@@ -1,5 +1,5 @@
 import { openDb } from "./db"
-
+import chalk from "chalk"
 const db = openDb()
 
 const countStmt = db.prepare("SELECT COUNT(*) as c FROM request_logs")
@@ -13,8 +13,8 @@ vacuumStmt.run()
 
 const after = countStmt.get() as { c: number }
 
-console.log(`Records before: ${before.c}`)
-console.log(`Records after: ${after.c}`)
+console.log(chalk.yellow(`Records before: `+ chalk.green(`${before.c}`)))
+console.log(chalk.yellow(`Records after: `+ chalk.green(`${after.c}`)))
 
 db.close()
 

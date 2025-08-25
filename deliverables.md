@@ -100,6 +100,15 @@ Total monitoring time: 10.00 minutes
 Uptime (HTTP 200): 89.23%
 ```
 
+#### Alternative: Full flow (clear → monitor → report)
+```bash
+npm run clear:run
+```
+What this does:
+- Clears the database
+- Runs monitoring with current environment variables
+- Prints the uptime report
+
 #### 6) Reproduce and analyze bugs
 ```bash
 npm run probe
@@ -367,6 +376,7 @@ npx ts-node src/monitor.ts
 | `TIMEOUT_PER_REQUEST` | Individual request timeout (ms) | 10000 | `15000` |
 | `BASE_URL` | API base URL | https://qa-challenge-nine.vercel.app | Custom URL |
 | `API_URL` | API endpoint path | /api/name-checker | `/custom/path` |
+| `DB_PATH` | SQLite database file path | request_logs.db | `./custom.db` |
 
 ### Quick Test Procedure
 To quickly verify everything works:

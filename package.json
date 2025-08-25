@@ -7,7 +7,8 @@
     "monitor": "tsx src/monitor.ts",
     "report": "tsx src/report.ts",
     "clear": "tsx src/clear-db.ts",
-    "probe": "tsx src/bugs_founded.ts"
+    "probe": "tsx src/bugs_founded.ts",
+    "clear:run": "tsx src/clear-db.ts && tsx src/monitor.ts && tsx src/report.ts"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,7 @@
   "dependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "better-sqlite3": "^12.2.0",
+    "chalk": "^4.1.2",
     "dotenv": "^17.2.1",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"

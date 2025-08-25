@@ -2,6 +2,7 @@ import "dotenv/config"
 import { callApi } from "./http"
 import { openDb } from "./db"
 import testCases from "../data/test-cases.json"
+import chalk from "chalk"
 
 const insert = `
 INSERT INTO request_logs (url, name_parameter, response_status, response_text, timestamp) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
@@ -13,19 +14,19 @@ const endAt = Date.now() + monitorTime * 60 * 1000
 const timeoutBetweenRequests = Number(process.env.TIMEOUT_BETWEEN_REQUESTS) || 1000
 
 let requests = 0
-console.log(`Monitor started for ${monitorTime} minute(s)`)
+console.log(chalk.blue(`Monitor started for ${monitorTime} minute(s)`))
 
 const countdownInterval = setInterval(() => {
     const timeRemaining = Math.round((endAt - Date.now()) / 1000)
     if (timeRemaining > 0) {
-        process.stdout.write(`\rTime remaining: ${timeRemaining} seconds`)
+        process.stdout.write(chalk.yellow(`\rTime remaining: ${timeRemaining} seconds`))    
     } else {
         clearInterval(countdownInterval)
     }
 }, 1000)
 
 const initialTimeRemaining = Math.round((endAt - Date.now()) / 1000)
-process.stdout.write(`\rTime remaining: ${initialTimeRemaining} seconds`)
+process.stdout.write(chalk.yellow(`\rTime remaining: ${initialTimeRemaining} seconds`))
 
 try {
     while (Date.now() < endAt) {
@@ -49,7 +50,7 @@ try {
                 stmt.run(url, nameParameterStr, status, responseText)
                 requests++
             } catch (dbError) {
-                console.error(`\nFailed to write to database for ${nameParameterStr}:`, dbError instanceof Error ? dbError.message : 'Unknown database error')
+                console.error(chalk.red(`\nFailed to write to database for ${nameParameterStr}:`), dbError instanceof Error ? dbError.message : 'Unknown database error')
                 requests++
             }
             
@@ -59,5 +60,5 @@ try {
 } finally {
     clearInterval(countdownInterval)
     process.stdout.write(`\n`)
-    console.log(`Monitor finished. ${requests} requests were made in ${monitorTime} minutes`)
+    console.log(chalk.green(`Monitor finished. ${requests} requests were made in ${monitorTime} minutes`))
 }

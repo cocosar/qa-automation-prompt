@@ -1,12 +1,13 @@
 import Database from "better-sqlite3"
+import chalk from "chalk"
 
 let db: Database.Database
 
 try {
     db = new Database("request_logs.db", { readonly: true })
 } catch (error) {
-    console.error("Failed to connect to database:", error instanceof Error ? error.message : 'Unknown database error')
-    console.log("Make sure the database file exists and run 'npm run monitor' first.")
+    console.error(chalk.red("Failed to connect to database:"), error instanceof Error ? error.message : 'Unknown database error')
+    console.log(chalk.red("Make sure the database file exists and run 'npm run monitor' first."))
     process.exit(1)
 }
 
@@ -26,18 +27,18 @@ try {
         ORDER BY response_status
     `).all() as { status: number; c: number }[]
 } catch (error) {
-    console.error("Failed to query database:", error instanceof Error ? error.message : 'Unknown database error')
-    console.log("The database might be corrupted or have an incorrect schema.")
-    console.log("Try deleting the database file and running 'npm run monitor' again.")
+    console.error(chalk.red("Failed to query database:"), error instanceof Error ? error.message : 'Unknown database error')
+    console.log(chalk.red("The database might be corrupted or have an incorrect schema."))
+    console.log(chalk.red("Try deleting the database file and running 'npm run monitor' again."))
     process.exit(1)
 }
 
 if (totalRows.c === 0) {
-    console.log(`--------------------------------`)
-    console.log(`Uptime report`)
-    console.log(`--------------------------------`)
-    console.log(`No data found in request_logs. Run the monitor first (npm run monitor).`)
-    console.log(`--------------------------------`)
+    console.log(chalk.blue(`--------------------------------`))
+    console.log(chalk.blue(`Uptime report`))
+    console.log(chalk.blue(`--------------------------------`))
+    console.log(chalk.blue(`No data found in request_logs. Run the monitor first (npm run monitor).`))
+    console.log(chalk.blue(`--------------------------------`))
     process.exit(0)
 }
 
@@ -56,8 +57,8 @@ try {
         ORDER BY timestamp ASC
     `).all() as { status: number; timestamp: string }[]
 } catch (error) {
-    console.error("Failed to query timestamp data from database:", error instanceof Error ? error.message : 'Unknown database error')
-    console.log("The database might be corrupted or have missing data.")
+    console.error(chalk.red("Failed to query timestamp data from database:"), error instanceof Error ? error.message : 'Unknown database error')
+    console.log(chalk.red("The database might be corrupted or have missing data."))
     process.exit(1)
 }
 
@@ -91,26 +92,26 @@ const formatTs = (ts: string) => {
     return new Date(ms).toISOString()
 }
 
-console.log(`--------------------------------`)
-console.log(`Uptime report (by total requests)`)
-console.log(`--------------------------------`)
-console.log(`Total requests: ${totalRows.c}`)
-console.log(`Uptime (HTTP 200): ${uptime.toFixed(2)}% (${total200.c}/${totalRows.c})`)
-console.log(``)
-console.log(`Status breakdown:`)
+console.log(chalk.blue(`--------------------------------`))
+console.log(chalk.blue(`Uptime report (by total requests)`))
+console.log(chalk.blue(`--------------------------------`))
+console.log(chalk.yellow(`Total requests:`+ chalk.green(` ${totalRows.c}`)))
+console.log(chalk.yellow(`Uptime (HTTP 200):`+ chalk.green(` ${uptime.toFixed(2)}% (${total200.c}/${totalRows.c})`)))
+console.log(chalk.blue(`--------------------------------`))
+console.log(chalk.blue(`Status breakdown:`))
 for (const row of byStatus) {
-    console.log(`- ${row.status}: ${row.c} (${formatPct(row.c)})`)
+    console.log(chalk.yellow(`- ${row.status}: `+ chalk.green(`${row.c} (${formatPct(row.c)})`)))
 }
-console.log(`--------------------------------`)
-console.log(`Uptime report (by observed time)`)
-console.log(`--------------------------------`)
-console.log(`Window: ${formatTs(firstRequest.timestamp)} -> ${formatTs(lastRequest.timestamp)}`)
-console.log(`Total monitoring time: ${(totalTimeMs/1000/60).toFixed(2)} minutes`)
-console.log(`Uptime (HTTP 200): ${Number.isNaN(uptimeByTime) ? 'N/A' : uptimeByTime.toFixed(2) + '%'}`)
+console.log(chalk.blue(`--------------------------------`))
+console.log(chalk.blue(`Uptime report (by observed time)`))
+console.log(chalk.blue(`--------------------------------`))
+console.log(chalk.yellow(`Window: `+ chalk.green(`${formatTs(firstRequest.timestamp)} -> ${formatTs(lastRequest.timestamp)}`)))
+console.log(chalk.yellow(`Total monitoring time: `+ chalk.green(`${(totalTimeMs/1000/60).toFixed(2)} minutes`)))
+console.log(chalk.yellow(`Uptime (HTTP 200): `+ chalk.green(`${Number.isNaN(uptimeByTime) ? 'N/A' : uptimeByTime.toFixed(2) + '%'}`)))
 if (Number.isNaN(uptimeByTime)) {
-    console.log(`Note: need at least 2 log entries to compute time-based uptime.`)
+    console.log(chalk.red(`Note: need at least 2 log entries to compute time-based uptime.`))
 }
-console.log(`--------------------------------`)
+console.log(chalk.blue(`--------------------------------`))
 
 
 

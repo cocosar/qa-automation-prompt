@@ -3,11 +3,17 @@ const baseUrl = process.env.BASE_URL || "https://qa-challenge-nine.vercel.app"
 const apiUrl = process.env.API_URL || "/api/name-checker"
 const fullUrl = `${baseUrl}${apiUrl}`
 
+type ApiResponse = {
+    name?: string
+    error?: string
+    message?: string
+}
+
 type CallResult = {
     url: string,
     nameParameter: string,
     status: number,
-    body: unknown | string, 
+    body: ApiResponse, 
     latencyMs: number,
     errorMsg: string | null
 }
@@ -29,7 +35,7 @@ export const callApi = async (nameParameter: any): Promise<CallResult> => {
         })
 
         const status = response.status
-        let body: unknown | string = null
+        let body: ApiResponse = {}
         let errorMsg: string | null = null
 
         if (!response.ok) {
@@ -50,12 +56,12 @@ export const callApi = async (nameParameter: any): Promise<CallResult> => {
             }
         } catch (parseError) {
             try {
-                body = await response.text()
-                if (!response.ok && typeof body === "string" && body.trim()) {
-                    errorMsg += ` - Response: ${body}`
+                const bodyStr = await response.text() as string
+                if (!response.ok && typeof bodyStr === "string" && bodyStr.trim()) {
+                    errorMsg += ` - Response: ${bodyStr}`
                 }
             } catch (textError) {
-                body = null
+                body = {}
                 if (!response.ok) {
                     errorMsg += " - Unable to parse response body"
                 }
@@ -89,7 +95,7 @@ export const callApi = async (nameParameter: any): Promise<CallResult> => {
             url: fullUrl,
             nameParameter,
             status: 0,
-            body: null,
+            body: {},
             latencyMs,
             errorMsg: errorMessage
         }

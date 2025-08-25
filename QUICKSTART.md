@@ -16,6 +16,9 @@ npm run report
 
 # 4. Reproduce bugs
 npm run probe
+
+# Alt: Full flow (clear -> monitor -> report)
+npm run clear:run
 ```
 
 ## 🎯 What Each Command Does
@@ -26,6 +29,7 @@ npm run probe
 | `npm run report` | Calculate uptime from logged data | < 1 sec |
 | `npm run probe` | Test specific bug cases | < 5 sec |
 | `npm run clear` | Reset database | < 1 sec |
+| `npm run clear:run` | Reset DB, run monitor, then show report | ~10 min |
 
 ## 🔧 Quick Customization
 
