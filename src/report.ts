@@ -1,16 +1,36 @@
 import Database from "better-sqlite3"
 
-const db = new Database("request_logs.db", { readonly: true })
+let db: Database.Database
 
-const totalRows = db.prepare("SELECT COUNT(*) as c FROM request_logs").get() as { c: number }
-const total200 = db.prepare("SELECT COUNT(*) as c FROM request_logs WHERE response_status = 200").get() as { c: number }
-const total500 = db.prepare("SELECT COUNT(*) as c FROM request_logs WHERE response_status = 500").get() as { c: number }
-const byStatus = db.prepare(`
-    SELECT response_status AS status, COUNT(*) AS c
-    FROM request_logs
-    GROUP BY response_status
-    ORDER BY response_status
-`).all() as { status: number; c: number }[]
+try {
+    db = new Database("request_logs.db", { readonly: true })
+} catch (error) {
+    console.error("Failed to connect to database:", error instanceof Error ? error.message : 'Unknown database error')
+    console.log("Make sure the database file exists and run 'npm run monitor' first.")
+    process.exit(1)
+}
+
+let totalRows: { c: number }
+let total200: { c: number }
+let total500: { c: number }
+let byStatus: { status: number; c: number }[]
+
+try {
+    totalRows = db.prepare("SELECT COUNT(*) as c FROM request_logs").get() as { c: number }
+    total200 = db.prepare("SELECT COUNT(*) as c FROM request_logs WHERE response_status = 200").get() as { c: number }
+    total500 = db.prepare("SELECT COUNT(*) as c FROM request_logs WHERE response_status = 500").get() as { c: number }
+    byStatus = db.prepare(`
+        SELECT response_status AS status, COUNT(*) AS c
+        FROM request_logs
+        GROUP BY response_status
+        ORDER BY response_status
+    `).all() as { status: number; c: number }[]
+} catch (error) {
+    console.error("Failed to query database:", error instanceof Error ? error.message : 'Unknown database error')
+    console.log("The database might be corrupted or have an incorrect schema.")
+    console.log("Try deleting the database file and running 'npm run monitor' again.")
+    process.exit(1)
+}
 
 if (totalRows.c === 0) {
     console.log(`--------------------------------`)
@@ -23,18 +43,27 @@ if (totalRows.c === 0) {
 
 const uptime = (total200.c / totalRows.c) * 100
 
-const firstRequest = db.prepare("SELECT timestamp FROM request_logs ORDER BY timestamp ASC LIMIT 1").get() as { timestamp: string }
-const lastRequest = db.prepare("SELECT timestamp FROM request_logs ORDER BY timestamp DESC LIMIT 1").get() as { timestamp: string }
+let firstRequest: { timestamp: string }
+let lastRequest: { timestamp: string }
+let logs: { status: number; timestamp: string }[]
+
+try {
+    firstRequest = db.prepare("SELECT timestamp FROM request_logs ORDER BY timestamp ASC LIMIT 1").get() as { timestamp: string }
+    lastRequest = db.prepare("SELECT timestamp FROM request_logs ORDER BY timestamp DESC LIMIT 1").get() as { timestamp: string }
+    logs = db.prepare(`
+        SELECT response_status AS status, timestamp 
+        FROM request_logs 
+        ORDER BY timestamp ASC
+    `).all() as { status: number; timestamp: string }[]
+} catch (error) {
+    console.error("Failed to query timestamp data from database:", error instanceof Error ? error.message : 'Unknown database error')
+    console.log("The database might be corrupted or have missing data.")
+    process.exit(1)
+}
 
 const startTime = new Date(firstRequest.timestamp).getTime()
 const endTime = new Date(lastRequest.timestamp).getTime()
 const totalTimeMs = endTime - startTime
-
-const logs = db.prepare(`
-    SELECT response_status AS status, timestamp 
-    FROM request_logs 
-    ORDER BY timestamp ASC
-`).all() as { status: number; timestamp: string }[]
 
 function parseSqliteTimestampToMs(ts: string): number {
     const normalized = ts.includes("T") ? ts : ts.replace(" ", "T")

@@ -49,8 +49,17 @@ try {
             }
             
             const nameParameterStr = typeof res.nameParameter === 'string' ? res.nameParameter : JSON.stringify(res.nameParameter)
-            stmt.run(url, nameParameterStr, status, responseText)
-            requests++
+            
+            try {
+                stmt.run(url, nameParameterStr, status, responseText)
+                requests++
+            } catch (dbError) {
+                console.error(`\nFailed to write to database for ${nameParameterStr}:`, dbError instanceof Error ? dbError.message : 'Unknown database error')
+                // Continue monitoring even if database write fails
+                // We still count the request as attempted for consistency
+                requests++
+            }
+            
             await new Promise(resolve => setTimeout(resolve, timeoutBetweenRequests))
         }
     }

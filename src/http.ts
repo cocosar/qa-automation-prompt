@@ -32,29 +32,39 @@ export const callApi = async (nameParameter: any): Promise<CallResult> => {
         let body: unknown | string = null
         let errorMsg: string | null = null
 
+        // Always mark non-200 responses as errors for proper logging
+        if (!response.ok) {
+            errorMsg = `HTTP ${status}: ${response.statusText || 'Request failed'}`
+        }
+
         try {
             body = await response.json()
             if (typeof body === "object" && body !== null) {
-                errorMsg = (body as any).error ?? (body as any).message ?? null
-            }
-            
-            // For non-200 responses, ensure we capture error information
-            if (status !== 200 && !errorMsg) {
-                errorMsg = `HTTP ${status}: ${response.statusText || 'Request failed'}`
-                if (typeof body === "object" && body !== null) {
+                // For successful responses, check if there's an error field in the response
+                if (response.ok) {
+                    errorMsg = (body as any).error ?? (body as any).message ?? null
+                } else {
+                    // For non-200 responses, include response body in error message
                     const bodyStr = JSON.stringify(body)
                     if (bodyStr !== '{}' && bodyStr !== 'null') {
                         errorMsg += ` - Response: ${bodyStr}`
                     }
                 }
             }
-        } catch (error) {
-            body = await response.text()
-            // For non-200 responses with text body, include it in error message
-            if (status !== 200 && typeof body === "string" && body.trim()) {
-                errorMsg = `HTTP ${status}: ${response.statusText || 'Request failed'} - Response: ${body}`
-            } else if (status !== 200) {
-                errorMsg = `HTTP ${status}: ${response.statusText || 'Request failed'}`
+        } catch (parseError) {
+            // If JSON parsing fails, try to get text response
+            try {
+                body = await response.text()
+                // For non-200 responses with text body, include it in error message
+                if (!response.ok && typeof body === "string" && body.trim()) {
+                    errorMsg += ` - Response: ${body}`
+                }
+            } catch (textError) {
+                // If both JSON and text parsing fail, just use the status error
+                body = null
+                if (!response.ok) {
+                    errorMsg += " - Unable to parse response body"
+                }
             }
         }
         
@@ -68,13 +78,26 @@ export const callApi = async (nameParameter: any): Promise<CallResult> => {
             errorMsg
         }
     } catch (error) {
+        const latencyMs = performance.now() - startTimer
+        let errorMessage = "Unknown network error"
+        
+        if (error instanceof Error) {
+            if (error.name === 'AbortError') {
+                errorMessage = `Request timeout after ${defaultTimeOut}ms`
+            } else if (error.message.includes('fetch')) {
+                errorMessage = `Network error: ${error.message}`
+            } else {
+                errorMessage = error.message
+            }
+        }
+
         return {
             url: fullUrl,
             nameParameter,
             status: 0,
             body: null,
-            latencyMs: performance.now() - startTimer,
-            errorMsg: error instanceof Error ? error.message : "Unknown error"
+            latencyMs,
+            errorMsg: errorMessage
         }
     } finally {
         clearTimeout(timer)
