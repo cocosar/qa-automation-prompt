@@ -196,7 +196,7 @@ npm run probe
    **HTTP Status:** 0 (connection error)
 
 #### **Bug 3: Script Word Filtering (Overly Aggressive)**
-**Description:** Any string containing the word "script" triggers 500 error
+**Description:** Any string containing the word "script" twice or more triggers 500 error
 
 **Test cases:** `"script script"`, `"script script script"`
 
