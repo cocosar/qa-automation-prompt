@@ -20,7 +20,6 @@ const countdownInterval = setInterval(() => {
     if (timeRemaining > 0) {
         process.stdout.write(`\rTime remaining: ${timeRemaining} seconds`)
     } else {
-        // Clear the interval when time is up to prevent unnecessary execution
         clearInterval(countdownInterval)
     }
 }, 1000)
@@ -35,16 +34,12 @@ try {
             const status = res.status
             const url = res.url
             
-            // Improved logging for non-200 responses
             let responseText: string
-            if (res.errorMsg) {
-                // For errors (including non-200 responses), use the error message
+                if (res.errorMsg) {
                 responseText = res.errorMsg
             } else if (status === 200 && typeof res.body === 'object' && res.body !== null && 'name' in res.body) {
-                // For successful responses, extract the name field if available
                 responseText = JSON.stringify((res.body as any).name)
             } else {
-                // For other cases, serialize the entire body
                 responseText = JSON.stringify(res.body ?? null)
             }
             
@@ -55,8 +50,6 @@ try {
                 requests++
             } catch (dbError) {
                 console.error(`\nFailed to write to database for ${nameParameterStr}:`, dbError instanceof Error ? dbError.message : 'Unknown database error')
-                // Continue monitoring even if database write fails
-                // We still count the request as attempted for consistency
                 requests++
             }
             
@@ -64,7 +57,6 @@ try {
         }
     }
 } finally {
-    // Ensure the countdown interval is always cleared, even if errors occur
     clearInterval(countdownInterval)
     process.stdout.write(`\n`)
     console.log(`Monitor finished. ${requests} requests were made in ${monitorTime} minutes`)

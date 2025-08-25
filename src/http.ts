@@ -32,7 +32,6 @@ export const callApi = async (nameParameter: any): Promise<CallResult> => {
         let body: unknown | string = null
         let errorMsg: string | null = null
 
-        // Always mark non-200 responses as errors for proper logging
         if (!response.ok) {
             errorMsg = `HTTP ${status}: ${response.statusText || 'Request failed'}`
         }
@@ -40,11 +39,9 @@ export const callApi = async (nameParameter: any): Promise<CallResult> => {
         try {
             body = await response.json()
             if (typeof body === "object" && body !== null) {
-                // For successful responses, check if there's an error field in the response
                 if (response.ok) {
                     errorMsg = (body as any).error ?? (body as any).message ?? null
                 } else {
-                    // For non-200 responses, include response body in error message
                     const bodyStr = JSON.stringify(body)
                     if (bodyStr !== '{}' && bodyStr !== 'null') {
                         errorMsg += ` - Response: ${bodyStr}`
@@ -52,15 +49,12 @@ export const callApi = async (nameParameter: any): Promise<CallResult> => {
                 }
             }
         } catch (parseError) {
-            // If JSON parsing fails, try to get text response
             try {
                 body = await response.text()
-                // For non-200 responses with text body, include it in error message
                 if (!response.ok && typeof body === "string" && body.trim()) {
                     errorMsg += ` - Response: ${body}`
                 }
             } catch (textError) {
-                // If both JSON and text parsing fail, just use the status error
                 body = null
                 if (!response.ok) {
                     errorMsg += " - Unable to parse response body"
