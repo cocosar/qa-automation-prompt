@@ -19,28 +19,44 @@ const countdownInterval = setInterval(() => {
     const timeRemaining = Math.round((endAt - Date.now()) / 1000)
     if (timeRemaining > 0) {
         process.stdout.write(`\rTime remaining: ${timeRemaining} seconds`)
+    } else {
+        // Clear the interval when time is up to prevent unnecessary execution
+        clearInterval(countdownInterval)
     }
 }, 1000)
 
 const initialTimeRemaining = Math.round((endAt - Date.now()) / 1000)
 process.stdout.write(`\rTime remaining: ${initialTimeRemaining} seconds`)
 
-while (Date.now() < endAt) {
-	for (const testCase of testCases.testCases) {
-		const res = await callApi(testCase)
-		const status = res.status
-		const url = res.url
-		const responseText = res.errorMsg ??
-			(typeof res.body === 'object' && res.body !== null && 'name' in res.body
-				? JSON.stringify((res.body as any).name)
-				: JSON.stringify(res.body ?? null))
-		const nameParameterStr = typeof res.nameParameter === 'string' ? res.nameParameter : JSON.stringify(res.nameParameter)
-		stmt.run(url, nameParameterStr, status, responseText)
-		requests++
-        await new Promise(resolve => setTimeout(resolve, timeoutBetweenRequests))
-	}
+try {
+    while (Date.now() < endAt) {
+        for (const testCase of testCases.testCases) {
+            const res = await callApi(testCase)
+            const status = res.status
+            const url = res.url
+            
+            // Improved logging for non-200 responses
+            let responseText: string
+            if (res.errorMsg) {
+                // For errors (including non-200 responses), use the error message
+                responseText = res.errorMsg
+            } else if (status === 200 && typeof res.body === 'object' && res.body !== null && 'name' in res.body) {
+                // For successful responses, extract the name field if available
+                responseText = JSON.stringify((res.body as any).name)
+            } else {
+                // For other cases, serialize the entire body
+                responseText = JSON.stringify(res.body ?? null)
+            }
+            
+            const nameParameterStr = typeof res.nameParameter === 'string' ? res.nameParameter : JSON.stringify(res.nameParameter)
+            stmt.run(url, nameParameterStr, status, responseText)
+            requests++
+            await new Promise(resolve => setTimeout(resolve, timeoutBetweenRequests))
+        }
+    }
+} finally {
+    // Ensure the countdown interval is always cleared, even if errors occur
+    clearInterval(countdownInterval)
+    process.stdout.write(`\n`)
+    console.log(`Monitor finished. ${requests} requests were made in ${monitorTime} minutes`)
 }
-
-clearInterval(countdownInterval)
-process.stdout.write(`\n`)
-console.log(`Monitor finished. ${requests} requests were made in ${monitorTime} minutes`)

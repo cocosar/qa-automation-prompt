@@ -37,8 +37,25 @@ export const callApi = async (nameParameter: any): Promise<CallResult> => {
             if (typeof body === "object" && body !== null) {
                 errorMsg = (body as any).error ?? (body as any).message ?? null
             }
+            
+            // For non-200 responses, ensure we capture error information
+            if (status !== 200 && !errorMsg) {
+                errorMsg = `HTTP ${status}: ${response.statusText || 'Request failed'}`
+                if (typeof body === "object" && body !== null) {
+                    const bodyStr = JSON.stringify(body)
+                    if (bodyStr !== '{}' && bodyStr !== 'null') {
+                        errorMsg += ` - Response: ${bodyStr}`
+                    }
+                }
+            }
         } catch (error) {
             body = await response.text()
+            // For non-200 responses with text body, include it in error message
+            if (status !== 200 && typeof body === "string" && body.trim()) {
+                errorMsg = `HTTP ${status}: ${response.statusText || 'Request failed'} - Response: ${body}`
+            } else if (status !== 200) {
+                errorMsg = `HTTP ${status}: ${response.statusText || 'Request failed'}`
+            }
         }
         
         const latencyMs = performance.now() - startTimer
