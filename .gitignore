@@ -4,4 +4,5 @@ src/check.ts
 dist/
 request_logs.db-shm
 request_logs.db-wal
+request_logs.db.bak
 .env
