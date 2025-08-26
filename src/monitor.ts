@@ -3,12 +3,13 @@ import { callApi } from "./http"
 import { openDb } from "./db"
 import testCases from "../data/test-cases.json"
 import chalk from "chalk"
+import Database from "better-sqlite3"
 
 const insert = `
 INSERT INTO request_logs (url, name_parameter, response_status, response_text, timestamp) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
 `
-const db = openDb()
-const stmt = db.prepare(insert)
+let db: Database.Database | null = null
+let stmt: Database.Statement<[string, string, number, string]> | null = null
 const monitorTime = Number(process.env.TIMEOUT_MONITOR_IN_MINUTES) || 10
 const endAt = Date.now() + monitorTime * 60 * 1000
 const timeoutBetweenRequests = Number(process.env.TIMEOUT_BETWEEN_REQUESTS) || 1000
@@ -29,6 +30,16 @@ const initialTimeRemaining = Math.round((endAt - Date.now()) / 1000)
 process.stdout.write(chalk.yellow(`\rTime remaining: ${initialTimeRemaining} seconds`))
 
 try {
+    db = openDb()
+    stmt = db.prepare(insert)
+} catch (error) {
+    clearInterval(countdownInterval)
+    process.stdout.write(`\n`)
+    console.error(chalk.red("Failed to open database or prepare statement:"), error instanceof Error ? error.message : 'Unknown database error')
+    process.exit(1)
+}
+
+try {
     while (Date.now() < endAt) {
         for (const testCase of testCases.testCases) {
             const res = await callApi(testCase)
@@ -47,7 +58,7 @@ try {
             const nameParameterStr = typeof res.nameParameter === 'string' ? res.nameParameter : JSON.stringify(res.nameParameter)
             
             try {
-                stmt.run(url, nameParameterStr, status, responseText)
+                stmt!.run(url, nameParameterStr, status, responseText)
                 requests++
             } catch (dbError) {
                 console.error(chalk.red(`\nFailed to write to database for ${nameParameterStr}:`), dbError instanceof Error ? dbError.message : 'Unknown database error')
@@ -61,4 +72,5 @@ try {
     clearInterval(countdownInterval)
     process.stdout.write(`\n`)
     console.log(chalk.green(`Monitor finished. ${requests} requests were made in ${monitorTime} minutes`))
+    try { db?.close() } catch {}
 }

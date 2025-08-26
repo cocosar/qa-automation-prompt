@@ -109,6 +109,41 @@ What this does:
 - Runs monitoring with current environment variables
 - Prints the uptime report
 
+**Expected output (excerpt):**
+```
+> npm run clear
+
+Database cleared successfully. All request logs have been removed.
+
+> npm run monitor
+
+Monitor started for 1 minute(s)
+Time remaining: 59 seconds
+...
+Monitor finished. 30 requests were made in 1 minutes
+
+> npm run report
+
+=== Uptime Report (by total requests) ===
+
+Total requests: 30
+Uptime (HTTP 200): 90.00% (27/30)
+
+Status breakdown:
+┌─────────┬───────┬────────────┐
+│ Status  │ Count │ Percentage │
+├─────────┼───────┼────────────┤
+│ 200     │ 27    │ 90.00%     │
+│ 500     │ 3     │ 10.00%     │
+└─────────┴───────┴────────────┘
+
+=== Uptime Report (by observed time) ===
+
+Window: 2025-01-13T10:30:00.000Z → 2025-01-13T10:31:00.000Z
+Total monitoring time: 1.00 minutes
+Uptime (HTTP 200): 88.50%
+```
+
 #### 6) Reproduce and analyze bugs
 ```bash
 npm run probe

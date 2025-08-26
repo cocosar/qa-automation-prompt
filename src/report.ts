@@ -1,10 +1,14 @@
 import Database from "better-sqlite3"
 import chalk from "chalk"
+import dotenv from "dotenv"
+
+dotenv.config()
 
 let db: Database.Database
 
 try {
-    db = new Database("request_logs.db", { readonly: true })
+    const dbPath = process.env.DB_PATH || "request_logs.db"
+    db = new Database(dbPath, { readonly: true })
 } catch (error) {
     console.error(chalk.red("Failed to connect to database:"), error instanceof Error ? error.message : 'Unknown database error')
     console.log(chalk.red("Make sure the database file exists and run 'npm run monitor' first."))

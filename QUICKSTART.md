@@ -48,6 +48,49 @@ TIMEOUT_BETWEEN_REQUESTS=250 npm run monitor
 TIMEOUT_MONITOR_IN_MINUTES=1 TIMEOUT_BETWEEN_REQUESTS=500 npm run monitor
 ```
 
+## 🧪 Example Outputs
+
+### `npm run clear`
+```
+Database cleared successfully. All request logs have been removed.
+```
+
+### `npm run monitor` (excerpt)
+```
+Monitor started for 10 minute(s)
+Time remaining: 599 seconds
+Time remaining: 598 seconds
+...
+Time remaining: 1 seconds
+Monitor finished. 324 requests were made in 10 minutes
+```
+
+### `npm run report` (excerpt)
+```
+=== Uptime Report (by total requests) ===
+
+Total requests: 324
+Uptime (HTTP 200): 94.44% (306/324)
+
+Status breakdown:
+┌─────────┬───────┬────────────┐
+│ Status  │ Count │ Percentage │
+├─────────┼───────┼────────────┤
+│ 200     │ 306   │ 94.44%     │
+│ 500     │ 18    │ 5.56%      │
+└─────────┴───────┴────────────┘
+```
+
+### `npm run probe` (excerpt)
+```
+Testing bug cases...
+
+Case: "<script></script>"
+Response: Status 500 - Internal Server Error
+Reproduce with:
+curl -X POST -H "Content-Type: application/json" -d '{"name":"<script></script>"}' https://qa-challenge-nine.vercel.app/api/name-checker
+```
+
 ## 🐛 Expected Bug Findings
 
 After running `npm run probe`, you should see these bugs:
