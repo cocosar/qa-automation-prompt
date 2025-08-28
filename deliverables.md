@@ -39,6 +39,7 @@ The project works with default values, but you can customize behavior:
 - `TIMEOUT_PER_REQUEST` - Individual request timeout (default: 10000ms)
 - `BASE_URL` - API base URL (default: "https://qa-challenge-nine.vercel.app")
 - `API_URL` - API endpoint path (default: "/api/name-checker")
+- `DB_PATH` - DDBB path (default: request_logs.db)
 
 **Example: Run a quick 2-minute monitoring session with 500ms intervals:**
 ```bash
