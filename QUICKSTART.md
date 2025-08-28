@@ -5,6 +5,15 @@ Get up and running with the QA Automation Challenge in under 2 minutes.
 ## ⚡ TL;DR Commands
 
 ```bash
+# 0. Copy and complete with the variables the .env.example to an .env file
+Example:
+BASE_URL=https://qa-challenge-nine.vercel.app
+API_URL=/api/name-checker
+TIMEOUT_PER_REQUEST=10000
+TIMEOUT_MONITOR_IN_MINUTES=5
+TIMEOUT_BETWEEN_REQUESTS=100
+DB_PATH=request_logs.db
+
 # 1. Install dependencies
 npm install
 
